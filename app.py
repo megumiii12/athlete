@@ -162,18 +162,27 @@ def sensor_data():
 # 🔥 ESP32 ENDPOINT (NO AUTH)
 @app.route("/api/sensor-data-raw", methods=["POST"])
 def sensor_data_raw():
-    data = request.get_json()
-    hr = float(data["heart_rate"])
-    temp = float(data["temperature"])
-    athlete_id = int(data["athlete_id"])
+    try:
+        data = request.get_json(force=True)
 
-    pred = ai_model.predict(hr, temp) if ai_model else {
-        "is_abnormal": hr > 120 or temp > 37.5,
-        "alert_message": "Check readings"
-    }
+        hr = float(data.get("heart_rate", 0))
+        temp = float(data.get("temperature", 0))
+        athlete_id = int(data.get("athlete_id", 1))
+        alert = data.get("alert_message", "OK")
 
-    insert_health_data(athlete_id, hr, temp, pred)
-    return jsonify(success=True)
+        pred = {
+            "is_abnormal": hr == 0 or temp < 30 or temp > 37.5,
+            "alert_message": alert
+        }
+
+        insert_health_data(athlete_id, hr, temp, pred)
+
+        return jsonify(success=True), 200
+
+    except Exception as e:
+        print("❌ ESP32 ERROR:", e)
+        return jsonify(success=False, error=str(e)), 400
+
 
 # ======================
 # DATA FOR GRAPHS
