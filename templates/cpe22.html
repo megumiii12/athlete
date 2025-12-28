@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Athlete Health Monitor</title>
+
+  <!-- Custom Auth Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cpe22.css') }}" />
+
+  <!-- Ionicons -->
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+</head>
+<body class="body-base">
+
+  <!-- Navigation -->
+  <nav class="navbar-main">
+    <div class="navbar-container">
+      <div class="navbar-brand">
+        <span class="brand-emoji">🥇</span>
+        <span class="brand-text">Smart Athlete Health</span>
+      </div>
+      <div class="navbar-menu hidden-mobile">
+        <a href="#home" class="nav-link">Home</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </div>
+      <button class="btn-login-nav btnlogin-popup">Login</button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero-section">
+    <div class="hero-container">
+      <h1 class="hero-title">Monitor Your Health in Real-Time</h1>
+      <p class="hero-subtitle">AI-powered health monitoring for athletes with instant alerts</p>
+      <div class="hero-buttons">
+        <button class="btn-primary btnlogin-popup">Get Started</button>
+        <a href="#about" class="btn-secondary">Learn More</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">About Our System</h2>
+        <p class="section-description">
+          Smart Athlete Health Monitor is an advanced IoT-based health monitoring system 
+          designed specifically for athletes to track vital signs in real-time.
+        </p>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-card">
+          <div class="about-icon">📊</div>
+          <h3 class="about-title">Real-Time Monitoring</h3>
+          <p class="about-text">
+            Continuous tracking of heart rate and body temperature with instant data visualization.
+          </p>
+        </div>
+
+        <div class="about-card">
+          <div class="about-icon">🤖</div>
+          <h3 class="about-title">AI-Powered Alerts</h3>
+          <p class="about-text">
+            Machine learning algorithms detect abnormal readings and send instant notifications.
+          </p>
+        </div>
+
+        <div class="about-card">
+          <div class="about-icon">📱</div>
+          <h3 class="about-title">Easy Access</h3>
+          <p class="about-text">
+            Access your health data anytime, anywhere through our web-based dashboard.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Key Features</h2>
+        <p class="section-description">Everything you need for comprehensive health monitoring</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-circle">❤️</div>
+          <h4 class="feature-name">Heart Rate</h4>
+          <p class="feature-desc">Continuous BPM monitoring</p>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-circle">🌡️</div>
+          <h4 class="feature-name">Temperature</h4>
+          <p class="feature-desc">Body temperature tracking</p>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-circle">📈</div>
+          <h4 class="feature-name">Analytics</h4>
+          <p class="feature-desc">Historical data & trends</p>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-circle">⚠️</div>
+          <h4 class="feature-name">Alerts</h4>
+          <p class="feature-desc">Instant abnormality alerts</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Contact Us</h2>
+        <p class="section-description">Have questions? We'd love to hear from you!</p>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-info">
+          <h3 class="contact-heading">Get in Touch</h3>
+          
+          <div class="contact-item">
+            <div class="contact-icon-box">📧</div>
+            <div>
+              <h4 class="contact-label">Email</h4>
+              <p class="contact-value">akosimickokakaibangtao@athletehealth.com</p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-icon-box">📱</div>
+            <div>
+              <h4 class="contact-label">Phone</h4>
+              <p class="contact-value">+63 930 946 0975</p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-icon-box">📍</div>
+            <div>
+              <h4 class="contact-label">Location</h4>
+              <p class="contact-value">San Pablo City, Laguna, Philippines</p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-icon-box">⏰</div>
+            <div>
+              <h4 class="contact-label">Support Hours</h4>
+              <p class="contact-value">Monday - Friday: 9:00 AM - 6:00 PM</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-form-box">
+          <form id="contactForm">
+            <div class="form-group">
+              <label class="form-label">Name</label>
+              <input id="contactName" type="text" class="form-input" placeholder="Your name" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input id="contactEmail" type="email" class="form-input" placeholder="your@email.com" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea id="contactMessage" rows="4" class="form-input" placeholder="Your message..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <p class="footer-text">&copy; 2024 Smart Athlete Health Monitor. All rights reserved.</p>
+      <p class="footer-subtext">Powered by IoT, AI, and Cloud Technology</p>
+    </div>
+  </footer>
+
+  <!-- AUTH POPUP (login/register) -->
+  <div class="wrapper hidden" id="authWrapper">
+    <span class="icon-close" id="closePopup">
+      <ion-icon name="close"></ion-icon>
+    </span>
+
+    <!-- LOGIN -->
+    <div class="form-box login" id="loginBox">
+      <h2 class="form-title">Login</h2>
+
+      <form id="loginForm">
+        <div class="input-box">
+          <span class="icon"><ion-icon name="mail"></ion-icon></span>
+          <input type="email" id="loginEmail" required>
+          <label>Email</label>
+        </div>
+
+        <div class="input-box">
+          <span class="icon password-toggle" onclick="togglePassword('loginPassword', this)">
+            <ion-icon name="eye"></ion-icon>
+          </span>
+          <input type="password" id="loginPassword" required>
+          <label>Password</label>
+        </div>
+
+        <div class="remember-forgot">
+          <a href="#" id="forgotPassword">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+
+        <div class="login-register">
+          <p>Don't have an account?
+            <a href="#" class="register-link">Register</a>
+          </p>
+        </div>
+      </form>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="form-box register hidden" id="registerBox">
+      <h2 class="form-title">Register</h2>
+
+      <form id="registerForm">
+        <div class="input-box">
+          <span class="icon"><ion-icon name="person"></ion-icon></span>
+          <input type="text" id="registerUsername" required>
+          <label>Username</label>
+        </div>
+
+        <div class="input-box">
+          <span class="icon"><ion-icon name="mail"></ion-icon></span>
+          <input type="email" id="registerEmail" required>
+          <label>Email</label>
+        </div>
+
+        <div class="input-box">
+          <span class="icon" onclick="togglePassword('registerPassword', this)">
+            <ion-icon name="key"></ion-icon>
+          </span>
+          <input type="password" id="registerPassword" required>
+          <label>Password</label>
+        </div>
+
+        <div class="input-box">
+          <span class="icon"><ion-icon name="transgender"></ion-icon></span>
+          <select id="registerGender" required>
+            <option value="" disabled selected>Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+
+        <div class="input-box">
+          <span class="icon"><ion-icon name="calendar"></ion-icon></span>
+          <input type="number" id="registerAge" min="13" max="120" placeholder="Age" required>
+          <label>Age</label>
+        </div>
+
+        <button type="submit" class="btn">Register</button>
+
+        <div class="login-register">
+          <p>Already have an account?
+            <a href="#" class="login-link">Login</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Script -->
+  <script src="{{ url_for('static', filename='js/cpe22.js') }}"></script>
+
+</body>
+</html>

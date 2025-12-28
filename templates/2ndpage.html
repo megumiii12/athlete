@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Athlete Health Dashboard</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/2ndpage.css') }}">
+</head>
+
+<body class="dashboard-body">
+
+  <div class="dashboard-container">
+    <!-- Navbar -->
+    <nav class="navbar">
+      <a href="/" class="home-link">Home</a>
+      <a href="#" id="logoutBtn" class="logout-link">Logout</a>
+    </nav>
+
+    <!-- Title -->
+    <header class="dashboard-header">
+      <h1 class="dashboard-title">Smart Athlete Health Dashboard</h1>
+      <p class="dashboard-subtitle">Real-Time Monitoring & AI Insights</p>
+      <p class="dashboard-welcome" id="welcomeMessage">Welcome, <span id="username">User</span> <span id="userId" style="font-size: 0.8rem; color: #9ca3af;">(ID: --)</span></p>
+    </header>
+
+    <!-- Vital Stats -->
+    <div class="vital-stats">
+      <div class="vital-card">
+        <div class="vital-icon heart-rate-icon">
+          <svg class="heart-pulse" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="vital-label">Heart Rate</h3>
+          <span id="heartRateValue" class="vital-value hr-value">-- BPM</span>
+        </div>
+      </div>
+
+      <div class="vital-card">
+        <div class="vital-icon temp-icon">
+          <svg class="temp-icon-svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="vital-label">Temperature</h3>
+          <span id="tempValue" class="vital-value temp-value">-- °C</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login History Waveform Section -->
+    <div class="login-waveform-section">
+      <div class="waveform-header">
+        <h3 class="waveform-title">📊 Login History Waveform</h3>
+        <button id="toggleWaveform" class="waveform-toggle-btn">Hide Details</button>
+      </div>
+
+      <div id="waveformContent" class="waveform-content">
+        <div class="waveform-grid">
+          <!-- Login History Sidebar -->
+          <div class="login-history-sidebar">
+            <h4 class="sidebar-title">Recent Logins</h4>
+            <div id="loginHistoryList" class="login-list">
+              <p class="loading-message">Loading login history...</p>
+            </div>
+          </div>
+
+          <!-- Waveform Charts -->
+          <div class="waveform-charts">
+            <div class="waveform-chart-container">
+              <h4 class="chart-subtitle">Heart Rate During Session</h4>
+              <canvas id="loginHeartRateChart"></canvas>
+            </div>
+            <div class="waveform-chart-container">
+              <h4 class="chart-subtitle">Temperature During Session</h4>
+              <canvas id="loginTempChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Waveform Stats -->
+        <div class="waveform-stats">
+          <div class="stat-box">
+            <span class="stat-label">Avg HR</span>
+            <span id="avgHR" class="stat-value">-- BPM</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Max HR</span>
+            <span id="maxHR" class="stat-value">-- BPM</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Avg Temp</span>
+            <span id="avgTemp" class="stat-value">-- °C</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Duration</span>
+            <span id="duration" class="stat-value">-- min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3 class="chart-title">Heart Rate Trend</h3>
+        <canvas id="heartRateChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3 class="chart-title">Temperature Trend</h3>
+        <canvas id="tempChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Alert Box -->
+    <div id="alertBox" class="alert-box hidden">
+      <p class="alert-title">⚠️ Health Alert!</p>
+      <p id="alertMessage">Abnormal reading detected.</p>
+    </div>
+
+    <!-- Past Session Abnormal Events -->
+    <div class="history-section">
+      <div class="history-header">
+        <h3 class="history-title temp-history-title">📈 Past Session Abnormal Events</h3>
+        <button id="refreshSessionHistoryBtn" class="refresh-btn temp-refresh-btn">Refresh</button>
+      </div>
+      
+      <div id="sessionHistoryTableContainer" class="history-table-container">
+        <table class="history-table">
+          <thead class="history-thead temp-thead">
+            <tr>
+              <th class="history-th">Session Date</th>
+              <th class="history-th">Time in Session</th>
+              <th class="history-th">Temperature</th>
+              <th class="history-th">Heart Rate</th>
+              <th class="history-th">Type</th>
+            </tr>
+          </thead>
+          <tbody id="sessionHistoryTableBody" class="history-tbody">
+            <tr>
+              <td colspan="5" class="loading-message">Loading session history...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="noSessionHistoryMessage" class="no-history-message hidden">
+        <span class="no-history-emoji">✅</span>
+        <p class="no-history-text">No abnormal events in past sessions!</p>
+        <p class="no-history-subtext">All readings have been normal during your login sessions.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="{{ url_for('static', filename='js/2ndpage.js') }}"></script>
+</body>
+</html>
