@@ -5,18 +5,26 @@ from psycopg.rows import dict_row
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # ======================
-# DB CONNECTION
+# DB CONNECTION (SINGLE SOURCE)
 # ======================
-def get_connection():
+def get_db():
+    """
+    Returns a PostgreSQL connection (Render-safe)
+    """
     if not DATABASE_URL:
-        print("⚠️ DATABASE_URL not set")
-        return None
+        raise RuntimeError("DATABASE_URL is not set")
 
+    return psycopg.connect(
+        DATABASE_URL,
+        row_factory=dict_row,
+        sslmode="require"
+    )
+
+
+# Backward compatibility (if used elsewhere)
+def get_connection():
     try:
-        return psycopg.connect(
-            DATABASE_URL,
-            row_factory=dict_row
-        )
+        return get_db()
     except Exception as e:
         print("❌ DB connection error:", e)
         return None
@@ -67,7 +75,7 @@ def insert_health_data(athlete_id, heart_rate, temperature, pred):
                 athlete_id,
                 heart_rate,
                 temperature,
-                pred.get("is_abnormal"),
+                bool(pred.get("is_abnormal")),
                 pred.get("alert_message")
             ))
             conn.commit()
@@ -97,6 +105,7 @@ def get_latest_data(athlete_id):
     finally:
         conn.close()
 
+
 # ======================
 # GET HISTORY DATA (FOR GRAPHS)
 # ======================
@@ -107,22 +116,25 @@ def get_history_data(athlete_id, hours=24):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(f"""
                 SELECT heart_rate, temperature, timestamp, is_abnormal, alert_message
                 FROM health_data
                 WHERE athlete_id = %s
-                AND timestamp >= NOW() - INTERVAL '%s HOURS'
+                AND timestamp >= NOW() - INTERVAL '{int(hours)} HOURS'
                 ORDER BY timestamp ASC
-            """, (athlete_id, hours))
+            """, (athlete_id,))
 
             rows = cur.fetchall()
-
-            # Convert timestamp + boolean
             result = []
+
             for row in rows:
                 row = dict(row)
-                row["timestamp"] = row["timestamp"].isoformat() if row["timestamp"] else None
-                row["is_abnormal"] = bool(row["is_abnormal"])
+                row["timestamp"] = (
+                    row["timestamp"].isoformat()
+                    if row.get("timestamp")
+                    else None
+                )
+                row["is_abnormal"] = bool(row.get("is_abnormal"))
                 result.append(row)
 
             return result
@@ -143,21 +155,25 @@ def get_abnormal_temp_history(athlete_id, threshold=37.5, hours=168):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(f"""
                 SELECT heart_rate, temperature, timestamp
                 FROM health_data
                 WHERE athlete_id = %s
                 AND temperature >= %s
-                AND timestamp >= NOW() - INTERVAL '%s HOURS'
+                AND timestamp >= NOW() - INTERVAL '{int(hours)} HOURS'
                 ORDER BY timestamp DESC
-            """, (athlete_id, threshold, hours))
+            """, (athlete_id, threshold))
 
             rows = cur.fetchall()
-
             result = []
+
             for row in rows:
                 row = dict(row)
-                row["timestamp"] = row["timestamp"].isoformat() if row["timestamp"] else None
+                row["timestamp"] = (
+                    row["timestamp"].isoformat()
+                    if row.get("timestamp")
+                    else None
+                )
                 result.append(row)
 
             return result
