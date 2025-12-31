@@ -7,11 +7,9 @@ import os
 
 from utils.db_utils import (
     init_db,
-    init_devices_table,  # ← ADDED THIS
     insert_health_data,
     get_latest_data,
     get_history_data,
-    get_db
 )
 from utils.auth_utils import (
     init_auth_db,
@@ -36,17 +34,16 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,   # OK for browser, ESP32 does NOT use cookies
+    SESSION_COOKIE_SECURE=True,   # ✅ REQUIRED for Render HTTPS
     PERMANENT_SESSION_LIFETIME=timedelta(days=30)
 )
 
 # ======================
-# DATABASE INIT
+# DATABASE INIT (SAFE)
 # ======================
 if os.environ.get("DATABASE_URL"):
     init_db()
     init_auth_db()
-    init_devices_table()  # ← ADDED THIS LINE
     print("✅ Databases initialized")
 else:
     print("⚠️ DATABASE_URL not found")
@@ -62,7 +59,7 @@ except Exception as e:
     ai_model = None
 
 # ======================
-# WEB AUTH DECORATOR
+# AUTH DECORATOR
 # ======================
 def login_required(f):
     @wraps(f)
@@ -83,33 +80,6 @@ def login_required(f):
             return redirect(url_for("index"))
 
         request.current_user = user
-        return f(*args, **kwargs)
-    return wrapper
-
-# ======================
-# 🔒 DEVICE AUTH DECORATOR (ESP32)
-# ======================
-def device_auth_required(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        api_key = request.headers.get("X-API-KEY")
-
-        if not api_key:
-            return jsonify(error="Missing API Key"), 401
-
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT id FROM devices WHERE api_key=%s AND is_active=TRUE",
-            (api_key,)
-        )
-        device = cur.fetchone()
-        cur.close()
-
-        if not device:
-            return jsonify(error="Invalid or inactive device"), 403
-
-        request.device_id = device[0]
         return f(*args, **kwargs)
     return wrapper
 
@@ -167,10 +137,11 @@ def reset_password():
 @app.route("/api/verify-session")
 @login_required
 def verify_session():
-    return jsonify(success=True, user=request.current_user)
+    u = request.current_user
+    return jsonify(success=True, user=u)
 
 # ======================
-# SENSOR APIs (WEB)
+# SENSOR APIs
 # ======================
 @app.route("/api/sensor-data", methods=["POST"])
 @login_required
@@ -188,31 +159,30 @@ def sensor_data():
     insert_health_data(athlete_id, hr, temp, pred)
     return jsonify(success=True, data=pred)
 
-# ======================
-# 🔥 ESP32 SENSOR API (SECURED)
-# ======================
+# 🔥 ESP32 ENDPOINT (NO AUTH)
 @app.route("/api/sensor-data-raw", methods=["POST"])
-@device_auth_required
 def sensor_data_raw():
     try:
         data = request.get_json(force=True)
 
         hr = float(data.get("heart_rate", 0))
         temp = float(data.get("temperature", 0))
-
-        athlete_id = request.device_id  # FROM DEVICE AUTH
+        athlete_id = int(data.get("athlete_id", 1))
+        alert = data.get("alert_message", "OK")
 
         pred = {
             "is_abnormal": hr == 0 or temp < 30 or temp > 37.5,
-            "alert_message": "Abnormal reading" if hr == 0 else "OK"
+            "alert_message": alert
         }
 
         insert_health_data(athlete_id, hr, temp, pred)
+
         return jsonify(success=True), 200
 
     except Exception as e:
         print("❌ ESP32 ERROR:", e)
         return jsonify(success=False, error=str(e)), 400
+
 
 # ======================
 # DATA FOR GRAPHS

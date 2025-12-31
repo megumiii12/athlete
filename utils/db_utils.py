@@ -5,26 +5,18 @@ from psycopg.rows import dict_row
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # ======================
-# DB CONNECTION (SINGLE SOURCE)
+# DB CONNECTION
 # ======================
-def get_db():
-    """
-    Returns a PostgreSQL connection (Render-safe)
-    """
-    if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL is not set")
-
-    return psycopg.connect(
-        DATABASE_URL,
-        row_factory=dict_row,
-        sslmode="require"
-    )
-
-
-# Backward compatibility (if used elsewhere)
 def get_connection():
+    if not DATABASE_URL:
+        print("⚠️ DATABASE_URL not set")
+        return None
+
     try:
-        return get_db()
+        return psycopg.connect(
+            DATABASE_URL,
+            row_factory=dict_row
+        )
     except Exception as e:
         print("❌ DB connection error:", e)
         return None
@@ -58,48 +50,6 @@ def init_db():
 
 
 # ======================
-# INIT DEVICES TABLE (NEW - FOR ESP32 AUTH)
-# ======================
-def init_devices_table():
-    """
-    Initialize the devices table for ESP32 authentication
-    """
-    conn = get_connection()
-    if not conn:
-        return False
-
-    try:
-        with conn.cursor() as cur:
-            # Create devices table
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS devices (
-                    id SERIAL PRIMARY KEY,
-                    device_name VARCHAR(100) NOT NULL,
-                    api_key VARCHAR(255) UNIQUE NOT NULL,
-                    is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_seen TIMESTAMP
-                )
-            """)
-            
-            # Insert your ESP32 device if it doesn't exist
-            cur.execute("""
-                INSERT INTO devices (device_name, api_key, is_active)
-                VALUES ('ESP32_Main', 'ESP32_SECRET_KEY_123', TRUE)
-                ON CONFLICT (api_key) DO NOTHING
-            """)
-            
-            conn.commit()
-            print("✅ Devices table initialized")
-            return True
-    except Exception as e:
-        print("❌ Error initializing devices table:", e)
-        return False
-    finally:
-        conn.close()
-
-
-# ======================
 # INSERT SENSOR DATA
 # ======================
 def insert_health_data(athlete_id, heart_rate, temperature, pred):
@@ -117,7 +67,7 @@ def insert_health_data(athlete_id, heart_rate, temperature, pred):
                 athlete_id,
                 heart_rate,
                 temperature,
-                bool(pred.get("is_abnormal")),
+                pred.get("is_abnormal"),
                 pred.get("alert_message")
             ))
             conn.commit()
@@ -147,7 +97,6 @@ def get_latest_data(athlete_id):
     finally:
         conn.close()
 
-
 # ======================
 # GET HISTORY DATA (FOR GRAPHS)
 # ======================
@@ -158,25 +107,22 @@ def get_history_data(athlete_id, hours=24):
 
     try:
         with conn.cursor() as cur:
-            cur.execute(f"""
+            cur.execute("""
                 SELECT heart_rate, temperature, timestamp, is_abnormal, alert_message
                 FROM health_data
                 WHERE athlete_id = %s
-                AND timestamp >= NOW() - INTERVAL '{int(hours)} HOURS'
+                AND timestamp >= NOW() - INTERVAL '%s HOURS'
                 ORDER BY timestamp ASC
-            """, (athlete_id,))
+            """, (athlete_id, hours))
 
             rows = cur.fetchall()
-            result = []
 
+            # Convert timestamp + boolean
+            result = []
             for row in rows:
                 row = dict(row)
-                row["timestamp"] = (
-                    row["timestamp"].isoformat()
-                    if row.get("timestamp")
-                    else None
-                )
-                row["is_abnormal"] = bool(row.get("is_abnormal"))
+                row["timestamp"] = row["timestamp"].isoformat() if row["timestamp"] else None
+                row["is_abnormal"] = bool(row["is_abnormal"])
                 result.append(row)
 
             return result
@@ -197,25 +143,21 @@ def get_abnormal_temp_history(athlete_id, threshold=37.5, hours=168):
 
     try:
         with conn.cursor() as cur:
-            cur.execute(f"""
+            cur.execute("""
                 SELECT heart_rate, temperature, timestamp
                 FROM health_data
                 WHERE athlete_id = %s
                 AND temperature >= %s
-                AND timestamp >= NOW() - INTERVAL '{int(hours)} HOURS'
+                AND timestamp >= NOW() - INTERVAL '%s HOURS'
                 ORDER BY timestamp DESC
-            """, (athlete_id, threshold))
+            """, (athlete_id, threshold, hours))
 
             rows = cur.fetchall()
-            result = []
 
+            result = []
             for row in rows:
                 row = dict(row)
-                row["timestamp"] = (
-                    row["timestamp"].isoformat()
-                    if row.get("timestamp")
-                    else None
-                )
+                row["timestamp"] = row["timestamp"].isoformat() if row["timestamp"] else None
                 result.append(row)
 
             return result
