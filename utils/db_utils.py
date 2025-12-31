@@ -58,6 +58,48 @@ def init_db():
 
 
 # ======================
+# INIT DEVICES TABLE (NEW - FOR ESP32 AUTH)
+# ======================
+def init_devices_table():
+    """
+    Initialize the devices table for ESP32 authentication
+    """
+    conn = get_connection()
+    if not conn:
+        return False
+
+    try:
+        with conn.cursor() as cur:
+            # Create devices table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS devices (
+                    id SERIAL PRIMARY KEY,
+                    device_name VARCHAR(100) NOT NULL,
+                    api_key VARCHAR(255) UNIQUE NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_seen TIMESTAMP
+                )
+            """)
+            
+            # Insert your ESP32 device if it doesn't exist
+            cur.execute("""
+                INSERT INTO devices (device_name, api_key, is_active)
+                VALUES ('ESP32_Main', 'ESP32_SECRET_KEY_123', TRUE)
+                ON CONFLICT (api_key) DO NOTHING
+            """)
+            
+            conn.commit()
+            print("✅ Devices table initialized")
+            return True
+    except Exception as e:
+        print("❌ Error initializing devices table:", e)
+        return False
+    finally:
+        conn.close()
+
+
+# ======================
 # INSERT SENSOR DATA
 # ======================
 def insert_health_data(athlete_id, heart_rate, temperature, pred):

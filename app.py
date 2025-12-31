@@ -7,6 +7,7 @@ import os
 
 from utils.db_utils import (
     init_db,
+    init_devices_table,  # ← ADDED THIS
     insert_health_data,
     get_latest_data,
     get_history_data,
@@ -45,6 +46,7 @@ app.config.update(
 if os.environ.get("DATABASE_URL"):
     init_db()
     init_auth_db()
+    init_devices_table()  # ← ADDED THIS LINE
     print("✅ Databases initialized")
 else:
     print("⚠️ DATABASE_URL not found")
@@ -85,7 +87,7 @@ def login_required(f):
     return wrapper
 
 # ======================
-# 🔐 DEVICE AUTH DECORATOR (ESP32)
+# 🔒 DEVICE AUTH DECORATOR (ESP32)
 # ======================
 def device_auth_required(f):
     @wraps(f)
