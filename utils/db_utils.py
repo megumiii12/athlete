@@ -113,7 +113,7 @@ def get_latest_data(athlete_id):
 
 
 # ======================
-# GET HISTORY DATA (PH TIME)
+# GET HISTORY DATA (PH TIME) ✅ FIXED
 # ======================
 def get_history_data(athlete_id, hours=24):
     conn = get_connection()
@@ -131,9 +131,9 @@ def get_history_data(athlete_id, hours=24):
                     timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Manila' AS timestamp
                 FROM health_data
                 WHERE athlete_id = %s
-                AND timestamp >= NOW() - INTERVAL %s
+                AND timestamp >= NOW() - (%s || ' hours')::interval
                 ORDER BY timestamp ASC
-            """, (athlete_id, f"{int(hours)} HOURS"))
+            """, (athlete_id, str(int(hours))))
 
             rows = cur.fetchall()
             result = []
@@ -153,7 +153,7 @@ def get_history_data(athlete_id, hours=24):
 
 
 # ======================
-# GET ABNORMAL TEMP HISTORY (PH TIME)
+# GET ABNORMAL TEMP HISTORY (PH TIME) ✅ FIXED
 # ======================
 def get_abnormal_temp_history(athlete_id, threshold=37.5, hours=168):
     conn = get_connection()
@@ -170,9 +170,9 @@ def get_abnormal_temp_history(athlete_id, threshold=37.5, hours=168):
                 FROM health_data
                 WHERE athlete_id = %s
                 AND temperature >= %s
-                AND timestamp >= NOW() - INTERVAL %s
+                AND timestamp >= NOW() - (%s || ' hours')::interval
                 ORDER BY timestamp DESC
-            """, (athlete_id, threshold, f"{int(hours)} HOURS"))
+            """, (athlete_id, threshold, str(int(hours))))
 
             rows = cur.fetchall()
             result = []
