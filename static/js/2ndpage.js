@@ -330,9 +330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (userData.user) {
         localStorage.setItem('user_id', userData.user.id);
         const userIdEl = document.getElementById('userId');
-        if (userIdEl) {
-          userIdEl.textContent = `(ID: ${userData.user.id})`;
-        }
+  
       }
     }
   } catch (error) {
