@@ -15,7 +15,8 @@ def get_connection():
     try:
         return psycopg.connect(
             DATABASE_URL,
-            row_factory=dict_row
+            row_factory=dict_row,
+            sslmode="require"
         )
     except Exception as e:
         print("❌ DB connection error:", e)
@@ -67,7 +68,7 @@ def insert_health_data(athlete_id, heart_rate, temperature, pred):
                 athlete_id,
                 heart_rate,
                 temperature,
-                pred.get("is_abnormal"),
+                bool(pred.get("is_abnormal")),
                 pred.get("alert_message")
             ))
             conn.commit()
@@ -77,7 +78,7 @@ def insert_health_data(athlete_id, heart_rate, temperature, pred):
 
 
 # ======================
-# GET LATEST DATA
+# GET LATEST DATA (PH TIME)
 # ======================
 def get_latest_data(athlete_id):
     conn = get_connection()
@@ -87,18 +88,32 @@ def get_latest_data(athlete_id):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT *
+                SELECT
+                    heart_rate,
+                    temperature,
+                    is_abnormal,
+                    alert_message,
+                    timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Manila' AS timestamp
                 FROM health_data
                 WHERE athlete_id = %s
                 ORDER BY timestamp DESC
                 LIMIT 1
             """, (athlete_id,))
-            return cur.fetchone()
+
+            row = cur.fetchone()
+            if not row:
+                return None
+
+            row = dict(row)
+            row["timestamp"] = row["timestamp"].isoformat()
+            row["is_abnormal"] = bool(row["is_abnormal"])
+            return row
     finally:
         conn.close()
 
+
 # ======================
-# GET HISTORY DATA (FOR GRAPHS)
+# GET HISTORY DATA (PH TIME)
 # ======================
 def get_history_data(athlete_id, hours=24):
     conn = get_connection()
@@ -108,20 +123,24 @@ def get_history_data(athlete_id, hours=24):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT heart_rate, temperature, timestamp, is_abnormal, alert_message
+                SELECT
+                    heart_rate,
+                    temperature,
+                    is_abnormal,
+                    alert_message,
+                    timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Manila' AS timestamp
                 FROM health_data
                 WHERE athlete_id = %s
-                AND timestamp >= NOW() - INTERVAL '%s HOURS'
+                AND timestamp >= NOW() - INTERVAL %s
                 ORDER BY timestamp ASC
-            """, (athlete_id, hours))
+            """, (athlete_id, f"{int(hours)} HOURS"))
 
             rows = cur.fetchall()
-
-            # Convert timestamp + boolean
             result = []
+
             for row in rows:
                 row = dict(row)
-                row["timestamp"] = row["timestamp"].isoformat() if row["timestamp"] else None
+                row["timestamp"] = row["timestamp"].isoformat()
                 row["is_abnormal"] = bool(row["is_abnormal"])
                 result.append(row)
 
@@ -134,7 +153,7 @@ def get_history_data(athlete_id, hours=24):
 
 
 # ======================
-# GET ABNORMAL TEMPERATURE HISTORY
+# GET ABNORMAL TEMP HISTORY (PH TIME)
 # ======================
 def get_abnormal_temp_history(athlete_id, threshold=37.5, hours=168):
     conn = get_connection()
@@ -144,20 +163,23 @@ def get_abnormal_temp_history(athlete_id, threshold=37.5, hours=168):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT heart_rate, temperature, timestamp
+                SELECT
+                    heart_rate,
+                    temperature,
+                    timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Manila' AS timestamp
                 FROM health_data
                 WHERE athlete_id = %s
                 AND temperature >= %s
-                AND timestamp >= NOW() - INTERVAL '%s HOURS'
+                AND timestamp >= NOW() - INTERVAL %s
                 ORDER BY timestamp DESC
-            """, (athlete_id, threshold, hours))
+            """, (athlete_id, threshold, f"{int(hours)} HOURS"))
 
             rows = cur.fetchall()
-
             result = []
+
             for row in rows:
                 row = dict(row)
-                row["timestamp"] = row["timestamp"].isoformat() if row["timestamp"] else None
+                row["timestamp"] = row["timestamp"].isoformat()
                 result.append(row)
 
             return result
